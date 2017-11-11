@@ -26,7 +26,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 ctx?.function()
                         ?: ctx?.println()
                         ?: ctx?.whileStatement()
-                        ?: ctx?.ifStatment()
+                        ?: ctx?.ifStatement()
                         ?: ctx?.assignment()
                         ?: ctx?.variable()
                         ?: ctx?.expr()
@@ -55,7 +55,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
         return AstWhile(expr.expr, body)
     }
 
-    override fun visitIfStatment(ctx: LangParser.IfStatmentContext?): AstNode {
+    override fun visitIfStatement(ctx: LangParser.IfStatementContext?): AstNode {
         val expr = visit(ctx?.expr()) as AstExpr
         val thenCtx = ctx?.blockWithBraces(0)
         val elseCtx = ctx?.blockWithBraces(1)

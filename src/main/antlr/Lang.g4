@@ -8,7 +8,7 @@ statement           : println
                     | variable
                     | expr
                     | whileStatement
-                    | ifStatment
+                    | ifStatement
                     | assignment
                     | returnStatement;
 
@@ -20,7 +20,7 @@ varName             : Identifier;
 
 parameterNames      : Identifier (',' Identifier)*;
 whileStatement      : While '(' expr ')' blockWithBraces;
-ifStatment          : If '(' expr ')' blockWithBraces (Else blockWithBraces)?;
+ifStatement          : If '(' expr ')' blockWithBraces (Else blockWithBraces)?;
 assignment          : Identifier '=' expr;
 returnStatement     : Return expr?;
 
