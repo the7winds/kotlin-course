@@ -14,7 +14,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
     override fun visitFile(ctx: FileContext?): AstNode = visit(ctx?.block())
 
     override fun visitBlock(ctx: BlockContext?): AstNode {
-        return AstBody(ctx
+        return AstBlock(ctx
                 ?.statement()
                 ?.map { visit(it) } ?: Collections.emptyList())
     }
@@ -38,27 +38,29 @@ class Transformer : LangBaseVisitor<AstNode>() {
     override fun visitFunction(ctx: FunctionContext?): AstNode {
         val name = ctx?.funName()?.Identifier()?.text!!
         val signature = ctx.parameterNames()?.Identifier()?.map { it.text!! }!!
-        val body = visit(ctx.blockWithBraces()) as AstBody
+        val body = visit(ctx.blockWithBraces()) as AstBlock
 
         return AstFunction(name, signature, body)
     }
 
     override fun visitVariable(ctx: VariableContext?): AstNode {
         val varName = ctx?.varName()?.text!!
-        val expr = (if (ctx.expr() != null) { visit(ctx.expr()) } else { null }) as AstExpr?
+        val expr = if (ctx.expr() != null) { visit(ctx.expr()) } else { null } as AstExpr?
         return AstVarDecl(varName, expr?.expr)
     }
 
     override fun visitWhileStatement(ctx: LangParser.WhileStatementContext?): AstNode {
         val expr = visit(ctx?.expr()) as AstExpr
-        val body = visit(ctx?.blockWithBraces()) as AstBody
+        val body = visit(ctx?.blockWithBraces()) as AstBlock
         return AstWhile(expr.expr, body)
     }
 
     override fun visitIfStatment(ctx: LangParser.IfStatmentContext?): AstNode {
         val expr = visit(ctx?.expr()) as AstExpr
-        val thenBody = visit(ctx?.blockWithBraces(0)) as AstBody
-        val elseBody = if (ctx?.blockWithBraces(1) != null) { visit(ctx.blockWithBraces(0)) } else { null } as AstBody?
+        val thenCtx = ctx?.blockWithBraces(0)
+        val elseCtx = ctx?.blockWithBraces(1)
+        val thenBody = visit(thenCtx) as AstBlock
+        val elseBody = if (elseCtx != null) { visit(elseCtx) } else { null } as AstBlock?
         return AstCondition(expr.expr, thenBody, elseBody)
     }
 
@@ -69,7 +71,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitReturnStatement(ctx: ReturnStatementContext?): AstNode {
-        val expr = (if (ctx?.expr() != null) { visit(ctx.expr()) } else null) as AstExpr?
+        val expr = if (ctx?.expr() != null) { visit(ctx.expr()) } else { null } as AstExpr?
         return AstReturn(expr?.expr)
     }
 
@@ -133,6 +135,9 @@ class Transformer : LangBaseVisitor<AstNode>() {
         return AstExpr(expr)
     }
 
+    private val Boolean.int
+        get() = if (this) { 1 } else { 0 }
+
     override fun visitLevel2(ctx: Level2Context?): AstNode {
         val operands = ctx!!.level1()
         val initial = (visit(operands[0]) as AstExpr).expr
@@ -142,12 +147,12 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 .zip(tail)
                 .fold(initial, { lExpr, (opToken, r) ->
                     val op: (Int, Int) -> Int = when (opToken.text) {
-                        "<"  -> { x, y -> if (x < y) { 1 } else { 0 } }
-                        ">"  -> { x, y -> if (x > y) { 1 } else { 0 } }
-                        "<=" -> { x, y -> if (x <= y) { 1 } else { 0 } }
-                        ">=" -> { x, y -> if (x >= y) { 1 } else { 0 } }
-                        "==" -> { x, y -> if (x == y) { 1 } else { 0 } }
-                        "!=" -> { x, y -> if (x != y) { 1 } else { 0 } }
+                        "<"  -> { x, y -> (x < y).int }
+                        ">"  -> { x, y -> (x > y).int }
+                        "<=" -> { x, y -> (x <= y).int }
+                        ">=" -> { x, y -> (x >= y).int }
+                        "==" -> { x, y -> (x == y).int }
+                        "!=" -> { x, y -> (x != y).int }
                         else -> throw Exception("parser error")
                     }
                     val rExpr = (visit(r) as AstExpr).expr
@@ -193,26 +198,26 @@ class Transformer : LangBaseVisitor<AstNode>() {
     override fun visitErrorNode(node: ErrorNode?): AstNode = throw Exception("error")
 
     override fun visitFunName(ctx: FunNameContext?): AstNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
     }
 
     override fun visitVarName(ctx: LangParser.VarNameContext?): AstNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
     }
 
     override fun visitParameterNames(ctx: LangParser.ParameterNamesContext?): AstNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
     }
 
     override fun visitChildren(node: RuleNode?): AstNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
     }
 
     override fun visitArguments(ctx: ArgumentsContext?): AstNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
     }
 
     override fun visitTerminal(node: TerminalNode?): AstNode {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
     }
 }

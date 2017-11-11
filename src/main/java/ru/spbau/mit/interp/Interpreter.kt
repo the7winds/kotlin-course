@@ -1,16 +1,33 @@
 package ru.spbau.mit.interp
 
-class Scope(val parent: Scope?) {
-    var returnValue: Int? = null
-    var varsValues: MutableMap<String, Int> = HashMap()
-    var functions: MutableMap<String, AstFunction> = HashMap()
+import java.io.PrintStream
 
-    fun getVarValue(name: String): Int = varsValues[name] ?: parent?.getVarValue(name)!!
+class Scope(private val parent: Scope?, output: PrintStream? = null) {
+    private var varsValues: MutableMap<String, Int> = HashMap()
+    private var functions: MutableMap<String, AstFunction> = HashMap()
 
-    fun getFunction(name: String): AstFunction = functions[name] ?: parent?.getFunction(name)!!
+    val output: PrintStream = output ?: parent?.output ?: System.out
 
-    fun setOrAddVar(k: String, v: Int) {
-        varsValues[k] = v
+    var returnValue : Int? = null
+        set(value) {
+            parent?.returnValue = value
+            field = value
+        }
+
+    fun getVarValue(name: String): Int = varsValues[name] ?: parent!!.getVarValue(name)
+
+    fun getFunction(name: String): AstFunction = functions[name] ?: parent!!.getFunction(name)
+
+    fun addVar(name: String, v: Int = 0) {
+        varsValues[name] = v
+    }
+
+    fun setVar(name: String, v: Int) {
+        if (varsValues[name] != null) {
+            varsValues[name] = v
+        } else {
+            parent!!.setVar(name, v)
+        }
     }
 
     fun addFunction(name: String, astFunction: AstFunction) {
@@ -22,13 +39,13 @@ interface AstNode {
     fun run(scope: Scope)
 }
 
-class AstFunction(private val name: String, val signature: List<String>, val body: AstBody) : AstNode {
+class AstFunction(private val name: String, val signature: List<String>, val block: AstBlock) : AstNode {
     override fun run(scope: Scope) {
         scope.addFunction(name, this)
     }
 }
 
-class AstBody(private val statements: List<AstNode>) : AstNode {
+class AstBlock(private val statements: List<AstNode>) : AstNode {
     override fun run(scope: Scope) {
         statements.forEach {
             it.run(scope)
@@ -36,8 +53,6 @@ class AstBody(private val statements: List<AstNode>) : AstNode {
                 return
             }
         }
-
-        scope.returnValue = 0
     }
 }
 
@@ -52,37 +67,37 @@ class AstReturn(private val expr: ExprNode? = null) : AstNode {
 }
 
 class AstVarDecl(private val name: String, private val expr: ExprNode? = null) : AstNode {
-    override fun run(scope: Scope) = scope.setOrAddVar(name, expr?.eval(scope) ?: 0)
+    override fun run(scope: Scope) = scope.addVar(name, expr?.eval(scope) ?: 0)
 }
 
 class AstAssignment(private val name: String, private val expr: ExprNode) : AstNode {
-    override fun run(scope: Scope) = scope.setOrAddVar(name, expr.eval(scope))
+    override fun run(scope: Scope) = scope.setVar(name, expr.eval(scope))
 }
 
 class AstCondition(private val condition: ExprNode,
-                   private val thenBody: AstBody,
-                   private val elseBody: AstBody? = null) : AstNode {
+                   private val thenBlock: AstBlock,
+                   private val elseBlock: AstBlock? = null) : AstNode {
     override fun run(scope: Scope) {
-        if (condition.eval(scope) > 0) {
-            thenBody.run(Scope(scope))
+        if (condition.eval(scope) != 0) {
+            thenBlock.run(Scope(scope))
         } else {
-            elseBody?.run(Scope(scope))
+            elseBlock?.run(Scope(scope))
         }
     }
 }
 
-class AstWhile(private val condition: ExprNode, private val body: AstBody) : AstNode {
+class AstWhile(private val condition: ExprNode, private val block: AstBlock) : AstNode {
     override fun run(scope: Scope) {
         while (condition.eval(scope) != 0) {
-            body.run(Scope(scope))
+            block.run(Scope(scope))
         }
     }
 }
 
 class AstPrintln(private val args: List<ExprNode>) : AstNode {
     override fun run(scope: Scope) {
-        args.forEach { x -> print("${x.eval(scope)} ") }
-        println()
+        args.forEach { x -> scope.output.print("${x.eval(scope)} ") }
+        scope.output.println()
     }
 }
 
@@ -100,15 +115,19 @@ class Call(private val name: String, private val args: List<ExprNode>) : ExprNod
     override fun eval(scope: Scope): Int {
         val argsValues = args.map { x -> x.eval(scope) }
         val function = scope.getFunction(name)
-        val scope = Scope(null)
+        val calleeScope = Scope(scope)
         function.signature
                 .zip(argsValues)
-                .forEach { (k, v) ->
-                    scope.setOrAddVar(k, v)
+                .forEach { (name, v) ->
+                    calleeScope.addVar(name, v)
                 }
 
-        function.body.run(scope)
-        return scope.returnValue!!
+        function.block.run(calleeScope)
+
+        val returnValue = calleeScope.returnValue!!
+        calleeScope.returnValue = null
+
+        return returnValue
     }
 }
 

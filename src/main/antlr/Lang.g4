@@ -30,7 +30,7 @@ functionCall        : funName '(' arguments? ')';
 arguments           : expr (',' expr)*;
 varLoad             : Identifier;
 
-atom                : varLoad | constant | functionCall | '(' expr ')';
+atom                : constant | functionCall | varLoad | '(' expr ')';
 level0              : atom (Op0 atom)*;
 level1              : level0 (Op1 level0)*;
 level2              : level1 (Op2 level1)*;
