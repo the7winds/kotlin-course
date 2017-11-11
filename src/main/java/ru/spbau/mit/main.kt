@@ -15,8 +15,18 @@ fun main(args: Array<String>) {
     val lexer = LangLexer(CharStreams.fromFileName(args[1]))
     val parser = LangParser(BufferedTokenStream(lexer))
     val transformer = Transformer()
-    val ast = transformer.visit(parser.file())
-    val scope = Scope(null)
 
-    ast.run(scope)
+    try {
+        val ast = transformer.visit(parser.file())
+
+        try {
+            val scope = Scope(null)
+            ast.run(scope)
+        } catch (e: Exception) {
+            System.err.println("runtime error")
+        }
+    } catch (e: Exception) {
+        System.err.println("parser error")
+        System.exit(1)
+    }
 }
