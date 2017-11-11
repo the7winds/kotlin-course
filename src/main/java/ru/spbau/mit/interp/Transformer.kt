@@ -1,9 +1,8 @@
 package ru.spbau.mit.interp
 
 import org.antlr.v4.runtime.tree.ErrorNode
-import org.antlr.v4.runtime.tree.RuleNode
-import org.antlr.v4.runtime.tree.TerminalNode
-import ru.spbau.mit.interp.LangParser.*
+import ru.spbau.mit.parser.LangBaseVisitor
+import ru.spbau.mit.parser.LangParser.*
 import java.util.*
 
 
@@ -47,13 +46,13 @@ class Transformer : LangBaseVisitor<AstNode>() {
         return AstVarDecl(varName, expr?.expr)
     }
 
-    override fun visitWhileStatement(ctx: LangParser.WhileStatementContext?): AstNode {
+    override fun visitWhileStatement(ctx: WhileStatementContext?): AstNode {
         val expr = visit(ctx?.expr()) as AstExpr
         val body = visit(ctx?.blockWithBraces()) as AstBlock
         return AstWhile(expr.expr, body)
     }
 
-    override fun visitIfStatement(ctx: LangParser.IfStatementContext?): AstNode {
+    override fun visitIfStatement(ctx: IfStatementContext?): AstNode {
         val expr = visit(ctx?.expr()) as AstExpr
         val thenCtx = ctx?.blockWithBraces(0)
         val elseCtx = ctx?.blockWithBraces(1)
@@ -194,28 +193,4 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitErrorNode(node: ErrorNode?): AstNode = throw Exception("error")
-
-    override fun visitFunName(ctx: FunNameContext?): AstNode {
-        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
-    }
-
-    override fun visitVarName(ctx: LangParser.VarNameContext?): AstNode {
-        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
-    }
-
-    override fun visitParameterNames(ctx: LangParser.ParameterNamesContext?): AstNode {
-        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
-    }
-
-    override fun visitChildren(node: RuleNode?): AstNode {
-        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
-    }
-
-    override fun visitArguments(ctx: ArgumentsContext?): AstNode {
-        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
-    }
-
-    override fun visitTerminal(node: TerminalNode?): AstNode {
-        TODO("not implemented") //To change block of created functions use File | Settings | File Templates.
-    }
 }

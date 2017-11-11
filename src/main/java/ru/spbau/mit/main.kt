@@ -2,8 +2,8 @@ package ru.spbau.mit
 
 import org.antlr.v4.runtime.BufferedTokenStream
 import org.antlr.v4.runtime.CharStreams
-import ru.spbau.mit.interp.LangLexer
-import ru.spbau.mit.interp.LangParser
+import ru.spbau.mit.parser.LangLexer
+import ru.spbau.mit.parser.LangParser
 import ru.spbau.mit.interp.Scope
 import ru.spbau.mit.interp.Transformer
 

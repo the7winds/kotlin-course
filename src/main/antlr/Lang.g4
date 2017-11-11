@@ -43,6 +43,8 @@ constant returns [int value]
 
 
 // keywords
+//Comment             : '//' [\u0000-\ufffe]* '\n' -> skip;
+
 Println             : 'println';
 While               : 'while';
 Var                 : 'var';
