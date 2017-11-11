@@ -20,7 +20,7 @@ varName             : Identifier;
 
 parameterNames      : Identifier (',' Identifier)*;
 whileStatement      : While '(' expr ')' blockWithBraces;
-ifStatement          : If '(' expr ')' blockWithBraces (Else blockWithBraces)?;
+ifStatement         : If '(' expr ')' blockWithBraces (Else blockWithBraces)?;
 assignment          : Identifier '=' expr;
 returnStatement     : Return expr?;
 

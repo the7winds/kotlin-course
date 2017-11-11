@@ -87,6 +87,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 ctx?.constant()
                         ?: ctx?.functionCall()
                         ?: ctx?.varLoad()
+                        ?: ctx?.expr()
+
         return visit(atom)
     }
 
