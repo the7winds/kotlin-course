@@ -42,9 +42,9 @@ constant returns [int value]
                     : n=Literal {$value = Integer.parseInt($n.text);};
 
 
-// keywords
-//Comment             : '//' [\u0000-\ufffe]* '\n' -> skip;
+Comment             : '//' ~[\n]* -> skip;
 
+// keywords
 Println             : 'println';
 While               : 'while';
 Var                 : 'var';
