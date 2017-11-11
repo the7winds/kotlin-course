@@ -79,6 +79,13 @@ class AstWhile(private val condition: ExprNode, private val body: AstBody) : Ast
     }
 }
 
+class AstPrintln(private val args: List<ExprNode>) : AstNode {
+    override fun run(scope: Scope) {
+        args.forEach { x -> print("${x.eval(scope)} ") }
+        println()
+    }
+}
+
 interface ExprNode {
     fun eval(scope: Scope) : Int
 }

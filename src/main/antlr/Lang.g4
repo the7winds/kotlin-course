@@ -3,11 +3,10 @@ grammar Lang;
 file                : block EOF;
 block               : statement*;
 blockWithBraces     : '{' block '}';
-statement           : function | variable | expr | whileStatement | ifStatment | assignment | returnStatement;
+statement           : println | function | variable | expr | whileStatement | ifStatment | assignment | returnStatement;
 
-function            : Fun funName '(' parameterNames ')' blockWithBraces;
+function            : Fun funName '(' parameterNames? ')' blockWithBraces;
 funName             : Identifier;
-
 
 variable            : Var varName ('=' expr)?;
 varName             : Identifier;
@@ -18,7 +17,9 @@ ifStatment          : If '(' expr ')' blockWithBraces (Else blockWithBraces)?;
 assignment          : Identifier '=' expr;
 returnStatement     : Return expr?;
 
-functionCall        : funName '(' arguments ')';
+println             : Println '(' arguments? ')';
+
+functionCall        : funName '(' arguments? ')';
 arguments           : expr (',' expr)*;
 varLoad             : Identifier;
 
@@ -35,6 +36,7 @@ constant returns [int value]
 
 
 // keywords
+Println             : 'println';
 While               : 'while';
 Var                 : 'var';
 Fun                 : 'fun';

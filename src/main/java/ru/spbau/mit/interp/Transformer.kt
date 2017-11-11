@@ -180,6 +180,14 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitConstant(ctx: ConstantContext?): AstNode = AstExpr(Literal(ctx!!.value))
 
+    override fun visitPrintln(ctx: PrintlnContext?): AstNode {
+        val args = ctx?.arguments()
+                ?.expr()
+                ?.map { (visit(it) as AstExpr).expr } ?: Collections.emptyList()
+
+        return AstPrintln(args)
+    }
+
     override fun visitErrorNode(node: ErrorNode?): AstNode = throw Exception("error")
 
     override fun visitFunName(ctx: FunNameContext?): AstNode {
