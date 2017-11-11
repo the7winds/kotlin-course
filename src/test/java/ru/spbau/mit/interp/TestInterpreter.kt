@@ -20,7 +20,7 @@ class TestInterpreter {
                "recursion.lang, recursion.out",
                "nestedFunctions.lang, nestedFunctions.out",
                "closure.lang, closure.out")
-    fun testBranching(inputFile: String, outputFile: String) {
+    fun testInterpreter(inputFile: String, outputFile: String) {
         val inputFilePath = javaClass.classLoader.getResource(inputFile).path
         val outputFilePath = javaClass.classLoader.getResource(outputFile).path
         val lexer = LangLexer(CharStreams.fromFileName(inputFilePath))
