@@ -12,22 +12,22 @@ statement           : println
                     | assignment
                     | returnStatement;
 
-function            : Fun funName '(' parameterNames? ')' blockWithBraces;
+function            : Fun funName '(' parameterNames ')' blockWithBraces;
 funName             : Identifier;
 
 variable            : Var varName ('=' expr)?;
 varName             : Identifier;
 
-parameterNames      : Identifier (',' Identifier)*;
+parameterNames      : (Identifier (',' Identifier)*)?;
 whileStatement      : While '(' expr ')' blockWithBraces;
 ifStatement         : If '(' expr ')' blockWithBraces (Else blockWithBraces)?;
 assignment          : Identifier '=' expr;
 returnStatement     : Return expr?;
 
-println             : Println '(' arguments? ')';
+println             : Println '(' arguments ')';
 
-functionCall        : funName '(' arguments? ')';
-arguments           : expr (',' expr)*;
+functionCall        : funName '(' arguments ')';
+arguments           : (expr (',' expr)*)?;
 varLoad             : Identifier;
 
 atom                : constant | functionCall | varLoad | '(' expr ')';
