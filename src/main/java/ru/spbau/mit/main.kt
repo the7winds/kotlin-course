@@ -1,14 +1,22 @@
 package ru.spbau.mit
 
-fun getGreeting(): String {
-    val words = mutableListOf<String>()
-    words.add("Hello,")
-    
-    words.add("world!")
-
-    return words.joinToString(separator = " ")
-}
+import org.antlr.v4.runtime.BufferedTokenStream
+import org.antlr.v4.runtime.CharStreams
+import ru.spbau.mit.interp.Scope
+import ru.spbau.mit.interp.Transformer
+import ru.spbau.mit.parser.LangLexer
+import ru.spbau.mit.parser.LangParser
 
 fun main(args: Array<String>) {
-    println(getGreeting())
+    if (args.size != 2) {
+        System.err.println("usage: ./app FILENAME")
+    }
+
+    val lexer = LangLexer(CharStreams.fromFileName(args[1]))
+    val parser = LangParser(BufferedTokenStream(lexer))
+    val transformer = Transformer()
+    val ast = transformer.visit(parser.file())
+    val scope = Scope(null)
+
+    ast.run(scope)
 }
