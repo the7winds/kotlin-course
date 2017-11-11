@@ -18,8 +18,8 @@ class TestInterpreter {
     @ParameterizedTest
     @CsvSource("simple.lang, simple.out",
                "recursion.lang, recursion.out",
-               "nestedFunctions.lang, nestedFunctions.out")
-
+               "nestedFunctions.lang, nestedFunctions.out",
+               "closure.lang, closure.out")
     fun testBranching(inputFile: String, outputFile: String) {
         val inputFilePath = javaClass.classLoader.getResource(inputFile).path
         val outputFilePath = javaClass.classLoader.getResource(outputFile).path

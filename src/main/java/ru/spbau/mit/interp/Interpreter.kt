@@ -57,7 +57,7 @@ class AstBlock(private val statements: List<AstNode>) : AstNode {
 }
 
 class AstExpr(val expr: ExprNode) : AstNode {
-    override fun run(scope: Scope) {}
+    override fun run(scope: Scope) { expr.eval(scope) }
 }
 
 class AstReturn(private val expr: ExprNode? = null) : AstNode {
@@ -129,7 +129,7 @@ class Call(private val name: String, private val args: List<ExprNode>) : ExprNod
 
         function.block.run(calleeScope)
 
-        val returnValue = calleeScope.returnValue!!
+        val returnValue = calleeScope.returnValue ?: 0
         calleeScope.returnValue = null
 
         return returnValue
