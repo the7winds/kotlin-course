@@ -3,7 +3,14 @@ grammar Lang;
 file                : block EOF;
 block               : statement*;
 blockWithBraces     : '{' block '}';
-statement           : println | function | variable | expr | whileStatement | ifStatment | assignment | returnStatement;
+statement           : println
+                    | function
+                    | variable
+                    | expr
+                    | whileStatement
+                    | ifStatment
+                    | assignment
+                    | returnStatement;
 
 function            : Fun funName '(' parameterNames? ')' blockWithBraces;
 funName             : Identifier;
