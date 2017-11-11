@@ -96,7 +96,12 @@ class AstWhile(private val condition: ExprNode, private val block: AstBlock) : A
 
 class AstPrintln(private val args: List<ExprNode>) : AstNode {
     override fun run(scope: Scope) {
-        args.forEach { x -> scope.output.print("${x.eval(scope)} ") }
+        args.forEachIndexed { i, x ->
+            scope.output.print("${x.eval(scope)}")
+            if (i + 1 != args.size) {
+                scope.output.print(" ")
+            }
+        }
         scope.output.println()
     }
 }

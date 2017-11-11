@@ -3,9 +3,7 @@ package ru.spbau.mit.interp
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
-import ru.spbau.mit.parser.LangBaseVisitor
-import ru.spbau.mit.parser.LangParser
-import ru.spbau.mit.parser.LangParser.*
+import ru.spbau.mit.interp.LangParser.*
 import java.util.*
 
 
