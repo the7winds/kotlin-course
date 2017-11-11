@@ -14,7 +14,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
     override fun visitFile(ctx: FileContext?): AstNode = visit(ctx?.block())
 
     override fun visitBlock(ctx: BlockContext?): AstNode {
-        return AstBody(ctx?.statement()
+        return AstBody(ctx
+                ?.statement()
                 ?.map { visit(it) } ?: Collections.emptyList())
     }
 
@@ -22,13 +23,14 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitStatement(ctx: StatementContext?): AstNode {
         val statement =
-                ctx?.function() ?:
-                        ctx?.whileStatement() ?:
-                        ctx?.ifStatment() ?:
-                        ctx?.assignment() ?:
-                        ctx?.variable() ?:
-                        ctx?.expr() ?:
-                        ctx?.returnStatement()!!
+                ctx?.function()
+                        ?: ctx?.println()
+                        ?: ctx?.whileStatement()
+                        ?: ctx?.ifStatment()
+                        ?: ctx?.assignment()
+                        ?: ctx?.variable()
+                        ?: ctx?.expr()
+                        ?: ctx?.returnStatement()!!
 
         return visit(statement)
     }
@@ -83,9 +85,9 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitAtom(ctx: AtomContext?): AstNode {
         val atom =
-                ctx?.constant() ?:
-                        ctx?.functionCall() ?:
-                        ctx?.varLoad()
+                ctx?.constant()
+                        ?: ctx?.functionCall()
+                        ?: ctx?.varLoad()
         return visit(atom)
     }
 
