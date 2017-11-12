@@ -32,7 +32,7 @@ fun main(args: Array<String>) {
             System.exit(1)
         }
     } catch (e: Exception) {
-        System.err.println("parser error")
+        System.err.println("parser error: ${e.message}")
         System.exit(1)
     }
 }
