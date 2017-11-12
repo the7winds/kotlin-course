@@ -37,11 +37,11 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitFunction(ctx: FunctionContext?): AstNode {
-        val name = ctx?.funName()?.Identifier()?.text
-                ?: error("function has no name")
+        val name = ctx?.funName()?.Identifier()?.text ?: error("function has no name")
 
-        val signature = ctx.parameterNames()?.Identifier()?.map { it.text!! }
-                ?: error("null signature")
+        val signature = ctx.parameterNames()?.Identifier()?.map {
+            it.text ?: error("parameter has no name")
+        } ?: error("null signature")
 
         val body = visit(ctx.blockWithBraces()) as AstBlock
 
@@ -49,33 +49,24 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitVariable(ctx: VariableContext?): AstNode {
-        val varName = ctx?.varName()?.text
-                ?: error("variable has no name")
-
+        val varName = ctx?.varName()?.text ?: error("variable has no name")
         val expr = if (ctx.expr() != null) { visit(ctx.expr()) } else { null }
-
-
         return AstVarDeclaration(varName, expr?.toExpr())
     }
 
     override fun visitWhileStatement(ctx: WhileStatementContext?): AstNode {
-        val expr = visit(ctx?.expr()
-                ?: error("while has no condition"))
-        val body = visit(ctx.blockWithBraces()
-                ?: error("while has no body")) as AstBlock
+        val expr = visit(ctx?.expr() ?: error("while has no condition"))
+        val body = visit(ctx.blockWithBraces() ?: error("while has no body")) as AstBlock
         return AstWhile(expr.toExpr(), body)
     }
 
     override fun visitIfStatement(ctx: IfStatementContext?): AstNode {
-        val expr = visit(ctx?.expr()
-                ?: error("if has no condition"))
+        val expr = visit(ctx?.expr() ?: error("if has no condition"))
 
         val thenCtx = ctx.blockWithBraces(0)
+        val thenBody = visit(thenCtx ?: error("if has no then block")) as AstBlock
+
         val elseCtx = ctx.blockWithBraces(1)
-
-        val thenBody = visit(thenCtx
-                ?: error("if has no then block")) as AstBlock
-
         val elseBody = if (elseCtx != null) { visit(elseCtx) } else { null } as AstBlock?
 
         return AstIf(expr.toExpr(), thenBody, elseBody)
@@ -84,12 +75,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
     private fun AstNode.toExpr() : ExprNode = (this as AstExpr).expr
 
     override fun visitAssignment(ctx: AssignmentContext?): AstNode {
-        val name = ctx?.Identifier()?.text
-                ?: error("var assignment has no name")
-
-        val expr = visit(ctx.expr()
-                ?: error("var assignment has no expression"))
-
+        val name = ctx?.Identifier()?.text ?: error("var assignment has no name")
+        val expr = visit(ctx.expr() ?: error("var assignment has no expression"))
         return AstAssignment(name, expr.toExpr())
     }
 
@@ -99,11 +86,10 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitFunctionCall(ctx: FunctionCallContext?): AstNode {
-        val name = ctx?.funName()?.Identifier()?.text
-                ?: error("function call has no name")
-
-        val args = ctx.arguments()?.expr()?.map { visit(it).toExpr() }
-                ?: error("function call args is null")
+        val name = ctx?.funName()?.Identifier()?.text ?: error("function call has no name")
+        val args = ctx.arguments()?.expr()?.map {
+            visit(it).toExpr()
+        } ?: error("function call args is null")
 
         return AstExpr(Call(name, args))
     }
@@ -138,7 +124,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 "*" -> { x, y -> x * y }
                 "/" -> { x, y -> x / y }
                 "%" -> { x, y -> x % y }
-                else -> throw Exception("parser error")
+                else -> error("parser error")
             }
         },
                 ctx?.Op0() ?: error("operators is null"),
@@ -152,7 +138,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
             when (it) {
                 "+" -> { x, y -> x + y }
                 "-" -> { x, y -> x - y }
-                else -> throw Exception("parser error")
+                else -> error("parser error")
             }
         },
                 ctx?.Op1() ?: error("operators is null"),
@@ -173,7 +159,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 ">=" -> { x, y -> (x >= y).int }
                 "==" -> { x, y -> (x == y).int }
                 "!=" -> { x, y -> (x != y).int }
-                else -> throw Exception("parser error")
+                else -> error("parser error")
             }
         },
                 ctx?.Op2() ?: error("operators is null"),
@@ -187,7 +173,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
             when (it) {
                 "&&"  -> { x, y -> (x != 0 && y != 0).int }
                 "||"  -> { x, y -> (x != 0 || y != 0).int }
-                else -> throw Exception("parser error")
+                else -> error("parser error")
             }
         },
                 ctx?.Op3() ?: error("operators is null"),
@@ -196,15 +182,13 @@ class Transformer : LangBaseVisitor<AstNode>() {
         return AstExpr(expr)
     }
 
-    override fun visitExpr(ctx: ExprContext?): AstNode =
-            visit(ctx?.level3() ?: error("level3 is null"))
+    override fun visitExpr(ctx: ExprContext?): AstNode = visit(ctx?.level3() ?: error("level3 is null"))
 
     override fun visitConstant(ctx: ConstantContext?): AstNode =
             AstExpr(Literal(ctx?.value ?: error("constant is null")))
 
     override fun visitPrintln(ctx: PrintlnContext?): AstNode {
-        val args = ctx?.arguments()
-                ?.expr()
+        val args = ctx?.arguments()?.expr()
                 ?.map { visit(it).toExpr() } ?: Collections.emptyList()
 
         return AstPrintln(args)
