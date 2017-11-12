@@ -34,7 +34,7 @@ class Scope(private val parent: Scope?, output: PrintStream? = null) {
     }
 
     fun setVar(name: String, v: Int) {
-        if (varsValues[name] != null) {
+        if (varsValues.containsKey(name)) {
             varsValues[name] = v
         } else {
             parent?.setVar(name, v) ?: throw VariableNotFoundException("name")
