@@ -1,6 +1,6 @@
 package ru.spbau.mit.parser
 
-import ru.spbau.mit.parser.LangParser.*;
+import ru.spbau.mit.parser.LangParser.*
 
 class PrettyPrinter : LangBaseVisitor<String>() {
 

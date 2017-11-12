@@ -50,8 +50,8 @@ class TestAst {
     }
 
     @Test
-    fun testVarDecl() {
-        val statement = AstVarDecl("x", BinOp({ x, y -> x + y }, LoadVar("y"), Literal(1)))
+    fun testVarDeclaration() {
+        val statement = AstVarDeclaration("x", BinOp({ x, y -> x + y }, LoadVar("y"), Literal(1)))
         val scope = Scope(null)
         scope.addVar("y", 41)
 

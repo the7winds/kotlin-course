@@ -77,7 +77,7 @@ class AstReturn(private val expr: ExprNode? = null) : AstNode {
     }
 }
 
-class AstVarDecl(private val name: String, private val expr: ExprNode? = null) : AstNode {
+class AstVarDeclaration(private val name: String, private val expr: ExprNode? = null) : AstNode {
     override fun run(scope: Scope) = scope.addVar(name, expr?.eval(scope) ?: 0)
 }
 

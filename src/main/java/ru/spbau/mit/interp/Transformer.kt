@@ -57,7 +57,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
         val expr = if (ctx.expr() != null) { visit(ctx.expr()) } else { null }
 
 
-        return AstVarDecl(varName, expr?.toExpr())
+        return AstVarDeclaration(varName, expr?.toExpr())
     }
 
     override fun visitWhileStatement(ctx: WhileStatementContext?): AstNode {
