@@ -8,7 +8,7 @@ import ru.spbau.mit.parser.LangLexer
 import ru.spbau.mit.parser.LangParser
 
 fun main(args: Array<String>) {
-    if (args.size != 2) {
+    if (args.size != 1) {
         System.err.println("usage: ./app FILENAME")
     }
 
