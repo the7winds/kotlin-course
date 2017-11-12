@@ -30,8 +30,8 @@ class Scope(private val parent: Scope?, output: PrintStream? = null) {
         }
     }
 
-    fun addFunction(name: String, astFunction: AstFunction) {
-        functions[name] = astFunction
+    fun addFunction(astFunction: AstFunction) {
+        functions[astFunction.name] = astFunction
     }
 }
 
@@ -39,9 +39,9 @@ interface AstNode {
     fun run(scope: Scope)
 }
 
-class AstFunction(private val name: String, val signature: List<String>, val block: AstBlock) : AstNode {
+class AstFunction(val name: String, val signature: List<String>, val block: AstBlock) : AstNode {
     override fun run(scope: Scope) {
-        scope.addFunction(name, this)
+        scope.addFunction(this)
     }
 }
 
@@ -74,9 +74,9 @@ class AstAssignment(private val name: String, private val expr: ExprNode) : AstN
     override fun run(scope: Scope) = scope.setVar(name, expr.eval(scope))
 }
 
-class AstCondition(private val condition: ExprNode,
-                   private val thenBlock: AstBlock,
-                   private val elseBlock: AstBlock? = null) : AstNode {
+class AstIf(private val condition: ExprNode,
+            private val thenBlock: AstBlock,
+            private val elseBlock: AstBlock? = null) : AstNode {
     override fun run(scope: Scope) {
         if (condition.eval(scope) != 0) {
             thenBlock.run(Scope(scope))

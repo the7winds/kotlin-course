@@ -58,7 +58,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
         val elseCtx = ctx?.blockWithBraces(1)
         val thenBody = visit(thenCtx) as AstBlock
         val elseBody = if (elseCtx != null) { visit(elseCtx) } else { null } as AstBlock?
-        return AstCondition(expr.expr, thenBody, elseBody)
+        return AstIf(expr.expr, thenBody, elseBody)
     }
 
     override fun visitAssignment(ctx: AssignmentContext?): AstNode {
