@@ -2,6 +2,13 @@ package ru.spbau.mit.interp
 
 import java.io.PrintStream
 
+class VariableNotFoundException(varName: String) :
+        Exception("variable \"$varName\" not found")
+
+class FunctionNotFoundException(funName: String) :
+        Exception("variable \"$funName\" not found")
+
+
 class Scope(private val parent: Scope?, output: PrintStream? = null) {
     private var varsValues: MutableMap<String, Int> = HashMap()
     private var functions: MutableMap<String, AstFunction> = HashMap()
@@ -14,9 +21,13 @@ class Scope(private val parent: Scope?, output: PrintStream? = null) {
             field = value
         }
 
-    fun getVarValue(name: String): Int = varsValues[name] ?: parent!!.getVarValue(name)
+    fun getVarValue(name: String): Int = varsValues[name]
+            ?: parent?.getVarValue(name)
+            ?: throw VariableNotFoundException(name)
 
-    fun getFunction(name: String): AstFunction = functions[name] ?: parent!!.getFunction(name)
+    fun getFunction(name: String): AstFunction = functions[name]
+            ?: parent?.getFunction(name)
+            ?: throw FunctionNotFoundException(name)
 
     fun addVar(name: String, v: Int = 0) {
         varsValues[name] = v
@@ -26,7 +37,7 @@ class Scope(private val parent: Scope?, output: PrintStream? = null) {
         if (varsValues[name] != null) {
             varsValues[name] = v
         } else {
-            parent!!.setVar(name, v)
+            parent?.setVar(name, v) ?: throw VariableNotFoundException("name")
         }
     }
 
