@@ -1,8 +1,10 @@
-package ru.spbau.mit.interp
+package ru.spbau.mit
 import org.antlr.v4.runtime.BufferedTokenStream
 import org.antlr.v4.runtime.CharStreams
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import ru.spbau.mit.interp.Scope
+import ru.spbau.mit.interp.Transformer
 import ru.spbau.mit.parser.LangLexer
 import ru.spbau.mit.parser.LangParser
 import java.io.ByteArrayOutputStream
