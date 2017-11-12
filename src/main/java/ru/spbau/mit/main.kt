@@ -1,7 +1,6 @@
 package ru.spbau.mit
 
 import java.util.*
-import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 
@@ -11,44 +10,28 @@ import kotlin.collections.HashSet
  * @times - times to repeat
  */
 class NameStorage(name: String, times: Int) {
-    private val orders: Map<Char, ArrayList<Int>>
-    private val kString = StringBuilder()
+    private val kString = (1..times).joinToString(separator = "") { name }
     private val removed = HashSet<Int>()
-
-    init {
-        for (i in 1..times) {
-            kString.append(name)
-        }
-
-        val mutOrders: HashMap<Char, ArrayList<Int>> = HashMap()
+    private val orders =  mutableMapOf<Char, MutableList<Int>>().apply {
         kString.forEachIndexed { index, c ->
-            val order = mutOrders.getOrPut(c, { ArrayList() } )
-            order.add(index)
+            getOrPut(c, { ArrayList() }).add(index)
         }
-
-        orders = mutOrders
     }
 
     /**
      * @property name returns current name value
      */
     val name: String
-        get() = kString.filterIndexed { index, _ -> !removed.contains(index) }.toString()
+        get() = kString.filterIndexed { index, _ -> !removed.contains(index) }
 
     /**
      * removes [order] occurrence of character [c]
      */
     fun remove(c: Char, order: Int) {
         val order = order - 1
-        val toRemove = orders[c]?.get(order)
-
-        when (toRemove) {
-            null -> throw Exception("incorrect command")
-            else -> {
-                orders[c]?.removeAt(order)
-                removed.add(toRemove)
-            }
-        }
+        val toRemove = orders[c]?.get(order) ?: error("incorrect command")
+        orders[c]?.removeAt(order)
+        removed.add(toRemove)
     }
 }
 
