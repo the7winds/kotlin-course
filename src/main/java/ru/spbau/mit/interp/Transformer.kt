@@ -8,20 +8,18 @@ import ru.spbau.mit.parser.LangParser.*
 import java.util.*
 
 
-class TransformationException(message: String) : Exception(message)
-
 class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitFile(ctx: FileContext?): AstNode =
-            visit(ctx?.block() ?: throw TransformationException("no block found"))
+            visit(ctx?.block() ?: error("no block found"))
 
     override fun visitBlock(ctx: BlockContext?): AstNode =
             AstBlock(ctx
                     ?.statement()
-                    ?.map { visit(it) } ?: throw TransformationException("no statements found"))
+                    ?.map { visit(it) } ?: error("no statements found"))
 
     override fun visitBlockWithBraces(ctx: BlockWithBracesContext?): AstNode =
-            visit(ctx?.block() ?: throw TransformationException("no block found"))
+            visit(ctx?.block() ?: error("no block found"))
 
     override fun visitStatement(ctx: StatementContext?): AstNode {
         val statement =
@@ -33,17 +31,17 @@ class Transformer : LangBaseVisitor<AstNode>() {
                         ?: ctx?.variable()
                         ?: ctx?.expr()
                         ?: ctx?.returnStatement()
-                        ?: throw TransformationException("impossible statement")
+                        ?: error("impossible statement")
 
         return visit(statement)
     }
 
     override fun visitFunction(ctx: FunctionContext?): AstNode {
         val name = ctx?.funName()?.Identifier()?.text
-                ?: throw TransformationException("function has no name")
+                ?: error("function has no name")
 
         val signature = ctx.parameterNames()?.Identifier()?.map { it.text!! }
-                ?: throw TransformationException("null signature")
+                ?: error("null signature")
 
         val body = visit(ctx.blockWithBraces()) as AstBlock
 
@@ -52,7 +50,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitVariable(ctx: VariableContext?): AstNode {
         val varName = ctx?.varName()?.text
-                ?: throw TransformationException("variable has no name")
+                ?: error("variable has no name")
 
         val expr = if (ctx.expr() != null) { visit(ctx.expr()) } else { null }
 
@@ -62,21 +60,21 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitWhileStatement(ctx: WhileStatementContext?): AstNode {
         val expr = visit(ctx?.expr()
-                ?: throw TransformationException("while has no condition"))
+                ?: error("while has no condition"))
         val body = visit(ctx.blockWithBraces()
-                ?: throw TransformationException("while has no body")) as AstBlock
+                ?: error("while has no body")) as AstBlock
         return AstWhile(expr.toExpr(), body)
     }
 
     override fun visitIfStatement(ctx: IfStatementContext?): AstNode {
         val expr = visit(ctx?.expr()
-                ?: throw TransformationException("if has no condition"))
+                ?: error("if has no condition"))
 
         val thenCtx = ctx.blockWithBraces(0)
         val elseCtx = ctx.blockWithBraces(1)
 
         val thenBody = visit(thenCtx
-                ?: throw TransformationException("if has no then block")) as AstBlock
+                ?: error("if has no then block")) as AstBlock
 
         val elseBody = if (elseCtx != null) { visit(elseCtx) } else { null } as AstBlock?
 
@@ -87,10 +85,10 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitAssignment(ctx: AssignmentContext?): AstNode {
         val name = ctx?.Identifier()?.text
-                ?: throw TransformationException("var assignment has no name")
+                ?: error("var assignment has no name")
 
         val expr = visit(ctx.expr()
-                ?: throw TransformationException("var assignment has no expression"))
+                ?: error("var assignment has no expression"))
 
         return AstAssignment(name, expr.toExpr())
     }
@@ -102,16 +100,16 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     override fun visitFunctionCall(ctx: FunctionCallContext?): AstNode {
         val name = ctx?.funName()?.Identifier()?.text
-                ?: throw TransformationException("function call has no name")
+                ?: error("function call has no name")
 
         val args = ctx.arguments()?.expr()?.map { visit(it).toExpr() }
-                ?: throw TransformationException("function call args is null")
+                ?: error("function call args is null")
 
         return AstExpr(Call(name, args))
     }
 
     override fun visitVarLoad(ctx: VarLoadContext?): AstNode {
-        return AstExpr(LoadVar(ctx?.text ?: throw TransformationException("var load has no name")))
+        return AstExpr(LoadVar(ctx?.text ?: error("var load has no name")))
     }
 
     override fun visitAtom(ctx: AtomContext?): AstNode {
@@ -119,7 +117,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 ?: ctx?.functionCall()
                 ?: ctx?.varLoad()
                 ?: ctx?.expr()
-                ?: throw TransformationException("impossible atom")
+                ?: error("impossible atom")
 
         return visit(atom)
     }
@@ -143,8 +141,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> throw Exception("parser error")
             }
         },
-                ctx?.Op0() ?: throw TransformationException("operators is null"),
-                ctx.atom() ?: throw TransformationException("atoms is null"))
+                ctx?.Op0() ?: error("operators is null"),
+                ctx.atom() ?: error("atoms is null"))
 
         return AstExpr(expr)
     }
@@ -157,8 +155,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> throw Exception("parser error")
             }
         },
-                ctx?.Op1() ?: throw TransformationException("operators is null"),
-                ctx.level0() ?: throw TransformationException("level0 is null"))
+                ctx?.Op1() ?: error("operators is null"),
+                ctx.level0() ?: error("level0 is null"))
 
         return AstExpr(expr)
     }
@@ -178,8 +176,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> throw Exception("parser error")
             }
         },
-                ctx?.Op2() ?: throw TransformationException("operators is null"),
-                ctx.level1() ?: throw TransformationException("level1 is null"))
+                ctx?.Op2() ?: error("operators is null"),
+                ctx.level1() ?: error("level1 is null"))
 
         return AstExpr(expr)
     }
@@ -192,17 +190,17 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> throw Exception("parser error")
             }
         },
-                ctx?.Op3() ?: throw TransformationException("operators is null"),
-                ctx.level2() ?: throw TransformationException("level2 is null"))
+                ctx?.Op3() ?: error("operators is null"),
+                ctx.level2() ?: error("level2 is null"))
 
         return AstExpr(expr)
     }
 
     override fun visitExpr(ctx: ExprContext?): AstNode =
-            visit(ctx?.level3() ?: throw TransformationException("level3 is null"))
+            visit(ctx?.level3() ?: error("level3 is null"))
 
     override fun visitConstant(ctx: ConstantContext?): AstNode =
-            AstExpr(Literal(ctx?.value ?: throw TransformationException("constant is null")))
+            AstExpr(Literal(ctx?.value ?: error("constant is null")))
 
     override fun visitPrintln(ctx: PrintlnContext?): AstNode {
         val args = ctx?.arguments()
@@ -213,5 +211,5 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitErrorNode(node: ErrorNode?): AstNode =
-            throw TransformationException("error node")
+            error("error node")
 }
