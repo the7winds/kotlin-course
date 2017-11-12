@@ -14,9 +14,14 @@ fun main(args: Array<String>) {
 
     val lexer = LangLexer(CharStreams.fromFileName(args[1]))
     val parser = LangParser(BufferedTokenStream(lexer))
-    val transformer = Transformer()
+
+    if (parser.numberOfSyntaxErrors > 0) {
+        System.err.println("parser error")
+        System.exit(1)
+    }
 
     try {
+        val transformer = Transformer()
         val ast = transformer.visit(parser.file())
 
         try {
