@@ -58,7 +58,7 @@ fragment Letter     : [a-zA-Z];
 fragment Digit      : [0-9] ;
 
 Identifier          : Letter (Letter | Digit)*;
-Literal             : '-'? Digit+;
+Literal             : '-'? [1-9][0-9]*;
 Whitespace          : (' ' | '\t' | '\r'| '\n') -> skip;
 
 
