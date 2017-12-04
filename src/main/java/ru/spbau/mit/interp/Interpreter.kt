@@ -15,12 +15,6 @@ class Scope(private val parent: Scope?, output: PrintStream? = null) {
 
     val output: PrintStream = output ?: parent?.output ?: System.out
 
-    var returnValue : Int? = null
-        set(value) {
-            parent?.returnValue = value
-            field = value
-        }
-
     fun getVarValue(name: String): Int = varsValues[name]
             ?: parent?.getVarValue(name)
             ?: throw VariableNotFoundException(name)
@@ -47,49 +41,56 @@ class Scope(private val parent: Scope?, output: PrintStream? = null) {
 }
 
 interface AstNode {
-    fun run(scope: Scope)
+    fun run(scope: Scope): Int?
 }
 
 class AstFunction(val name: String, val signature: List<String>, val block: AstBlock) : AstNode {
-    override fun run(scope: Scope) {
+    override fun run(scope: Scope): Int? {
         scope.addFunction(this)
+        return null
     }
 }
 
 class AstBlock(private val statements: List<AstNode>) : AstNode {
-    override fun run(scope: Scope) {
+    override fun run(scope: Scope): Int? {
         statements.forEach {
-            it.run(scope)
-            if (scope.returnValue != null) {
-                return
+            val ret = it.run(scope)
+            if (ret != null) {
+                return ret
             }
         }
+
+        return null
     }
 }
 
 class AstExpr(val expr: ExprNode) : AstNode {
-    override fun run(scope: Scope) { expr.eval(scope) }
+    override fun run(scope: Scope): Int? = expr.eval(scope)
 }
 
 class AstReturn(private val expr: ExprNode? = null) : AstNode {
-    override fun run(scope: Scope) {
-        scope.returnValue = expr?.eval(scope) ?: 0
-    }
+    override fun run(scope: Scope): Int? = expr?.eval(scope)
 }
 
 class AstVarDeclaration(private val name: String, private val expr: ExprNode? = null) : AstNode {
-    override fun run(scope: Scope) = scope.addVar(name, expr?.eval(scope) ?: 0)
+    override fun run(scope: Scope): Int? {
+        scope.addVar(name, expr?.eval(scope) ?: 0)
+        return null
+    }
 }
 
 class AstAssignment(private val name: String, private val expr: ExprNode) : AstNode {
-    override fun run(scope: Scope) = scope.setVar(name, expr.eval(scope))
+    override fun run(scope: Scope): Int? {
+        scope.setVar(name, expr.eval(scope) ?: error("no value"))
+        return null
+    }
 }
 
 class AstIf(private val condition: ExprNode,
             private val thenBlock: AstBlock,
             private val elseBlock: AstBlock? = null) : AstNode {
-    override fun run(scope: Scope) {
-        if (condition.eval(scope) != 0) {
+    override fun run(scope: Scope): Int? {
+        return if (condition.eval(scope) != 0) {
             thenBlock.run(Scope(scope))
         } else {
             elseBlock?.run(Scope(scope))
@@ -98,15 +99,20 @@ class AstIf(private val condition: ExprNode,
 }
 
 class AstWhile(private val condition: ExprNode, private val block: AstBlock) : AstNode {
-    override fun run(scope: Scope) {
+    override fun run(scope: Scope): Int? {
         while (condition.eval(scope) != 0) {
-            block.run(Scope(scope))
+            val ret = block.run(Scope(scope))
+            if (ret != null) {
+                return ret
+            }
         }
+
+        return null
     }
 }
 
 class AstPrintln(private val args: List<ExprNode>) : AstNode {
-    override fun run(scope: Scope) {
+    override fun run(scope: Scope): Int? {
         args.forEachIndexed { i, x ->
             scope.output.print("${x.eval(scope)}")
             if (i + 1 != args.size) {
@@ -114,22 +120,25 @@ class AstPrintln(private val args: List<ExprNode>) : AstNode {
             }
         }
         scope.output.println()
+
+        return null
     }
 }
 
 interface ExprNode {
-    fun eval(scope: Scope) : Int
+    fun eval(scope: Scope): Int?
 }
 
 class BinOp(private val op: (Int, Int) -> Int,
             private val left: ExprNode,
             private val right: ExprNode) : ExprNode {
-    override fun eval(scope: Scope): Int = op(left.eval(scope), right.eval(scope))
+    override fun eval(scope: Scope): Int =
+            op(left.eval(scope) ?: error("no value"), right.eval(scope) ?: error("no value"))
 }
 
 class Call(private val name: String, private val args: List<ExprNode>) : ExprNode {
-    override fun eval(scope: Scope): Int {
-        val argsValues = args.map { x -> x.eval(scope) }
+    override fun eval(scope: Scope): Int? {
+        val argsValues = args.map { x -> x.eval(scope) ?: error("no value") }
         val function = scope.getFunction(name)
         val calleeScope = Scope(scope)
         function.signature
@@ -138,12 +147,7 @@ class Call(private val name: String, private val args: List<ExprNode>) : ExprNod
                     calleeScope.addVar(name, v)
                 }
 
-        function.block.run(calleeScope)
-
-        val returnValue = calleeScope.returnValue ?: 0
-        calleeScope.returnValue = null
-
-        return returnValue
+        return function.block.run(calleeScope)
     }
 }
 
