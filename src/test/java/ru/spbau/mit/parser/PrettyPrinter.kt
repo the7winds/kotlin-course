@@ -1,5 +1,6 @@
 package ru.spbau.mit.parser
 
+import org.antlr.v4.runtime.ParserRuleContext
 import ru.spbau.mit.parser.LangParser.*
 
 class PrettyPrinter : LangBaseVisitor<String>() {
@@ -15,16 +16,7 @@ class PrettyPrinter : LangBaseVisitor<String>() {
 
 
     override fun visitStatement(ctx: StatementContext?): String {
-        val statement = ctx?.ifStatement()
-                ?: ctx?.assignment()
-                ?: ctx?.expr()
-                ?: ctx?.println()
-                ?: ctx?.function()
-                ?: ctx?.whileStatement()
-                ?: ctx?.variable()
-                ?: ctx?.returnStatement()
-
-        return visit(statement)
+        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no statement"))
     }
 
     override fun visitFunction(ctx: FunctionContext?): String {
@@ -50,7 +42,7 @@ class PrettyPrinter : LangBaseVisitor<String>() {
     override fun visitVarName(ctx: VarNameContext?): String = ctx?.text ?: "<null>"
 
     override fun visitParameterNames(ctx: ParameterNamesContext?): String =
-            ctx?.Identifier()?.joinToString(transform = { visit(it) }) ?: "<null>"
+            ctx?.identifier()?.joinToString(transform = { visit(it) }) ?: "<null>"
 
     override fun visitWhileStatement(ctx: LangParser.WhileStatementContext?): String {
         val condition = visit(ctx?.expr())
@@ -67,7 +59,7 @@ class PrettyPrinter : LangBaseVisitor<String>() {
     }
 
     override fun visitAssignment(ctx: AssignmentContext?): String =
-            "${ctx?.Identifier()?.text} = ${visit(ctx?.expr())}"
+            "${ctx?.identifier()?.text} = ${visit(ctx?.expr())}"
 
     override fun visitReturnStatement(ctx: ReturnStatementContext?): String =
             "return ${visit(ctx?.expr())}"
@@ -82,32 +74,33 @@ class PrettyPrinter : LangBaseVisitor<String>() {
             ctx?.expr()?.joinToString(transform = { visit(it) }) ?: "<null>"
 
     override fun visitVarLoad(ctx: LangParser.VarLoadContext?): String =
-            ctx?.Identifier()?.text ?: "<null>"
+            ctx?.identifier()?.text ?: "<null>"
 
     override fun visitAtom(ctx: LangParser.AtomContext?): String {
-        val atom = ctx?.constant()
-                ?: ctx?.functionCall()
-                ?: ctx?.varLoad()
-                ?: ctx?.expr()
-
-        return visit(atom)
+        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no atom"))
     }
 
     override fun visitLevel0(ctx: LangParser.Level0Context?): String {
         val operands = ctx?.atom()!!.map { visit(it) }
-        val operators = ctx.Op0()!!.map { it.text }
+        val operators = ctx.op0()!!.map { it.text }
         return mergeOperators(operands, operators)
     }
 
     override fun visitLevel1(ctx: LangParser.Level1Context?): String {
         val operands = ctx?.level0()!!.map { visit(it) }
-        val operators = ctx.Op1()!!.map { it.text }
+        val operators = ctx.op1()!!.map { it.text }
         return mergeOperators(operands, operators)
     }
 
     override fun visitLevel2(ctx: LangParser.Level2Context?): String {
         val operands = ctx?.level1()!!.map { visit(it) }
-        val operators = ctx.Op2()!!.map { it.text }
+        val operators = ctx.op2()!!.map { it.text }
+        return mergeOperators(operands, operators)
+    }
+
+    override fun visitLevel3(ctx: LangParser.Level3Context?): String {
+        val operands = ctx?.level2()!!.map { visit(it) }
+        val operators = ctx.op3()!!.map { it.text }
         return mergeOperators(operands, operators)
     }
 
@@ -119,12 +112,6 @@ class PrettyPrinter : LangBaseVisitor<String>() {
         } else {
             operands[0]
         }
-    }
-
-    override fun visitLevel3(ctx: LangParser.Level3Context?): String {
-        val operands = ctx?.level2()!!.map { visit(it) }
-        val operators = ctx.Op3()!!.map { it.text }
-        return mergeOperators(operands, operators)
     }
 
     override fun visitExpr(ctx: LangParser.ExprContext?): String {

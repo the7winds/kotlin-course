@@ -8,6 +8,37 @@ import kotlin.test.assertEquals
 class TestParser {
 
     @Test
+    fun testLiteral() {
+        val lexer = LangLexer(CharStreams.fromString("0abc"))
+        val parser = LangParser(BufferedTokenStream(lexer))
+        val str = PrettyPrinter().visit(parser.block())
+        println(str)
+        assertEquals(1, parser.numberOfSyntaxErrors)
+    }
+
+    @Test
+    fun testNegativeNumber() {
+        val lexer = LangLexer(CharStreams.fromString("-12"))
+        val parser = LangParser(BufferedTokenStream(lexer))
+        val testString = PrettyPrinter().visit(parser.expr())
+        val expectedString = "(-12)"
+
+        assertEquals(expectedString, testString)
+        assertEquals(0, parser.numberOfSyntaxErrors)
+    }
+
+    @Test
+    fun testSubstract() {
+        val lexer = LangLexer(CharStreams.fromString("1-1"))
+        val parser = LangParser(BufferedTokenStream(lexer))
+        val testString = PrettyPrinter().visit(parser.expr())
+        val expectedString = "((1) - (1))"
+
+        assertEquals(expectedString, testString)
+        assertEquals(0, parser.numberOfSyntaxErrors)
+    }
+
+    @Test
     fun testAssociativity() {
         val lexer = LangLexer(CharStreams.fromString("1 - 1 - 1 - 1"))
         val parser = LangParser(BufferedTokenStream(lexer))

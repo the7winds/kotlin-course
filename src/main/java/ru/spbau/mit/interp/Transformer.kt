@@ -2,7 +2,6 @@ package ru.spbau.mit.interp
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.ErrorNode
-import org.antlr.v4.runtime.tree.TerminalNode
 import ru.spbau.mit.parser.LangBaseVisitor
 import ru.spbau.mit.parser.LangParser.*
 import java.util.*
@@ -22,25 +21,14 @@ class Transformer : LangBaseVisitor<AstNode>() {
             visit(ctx?.block() ?: error("no block found"))
 
     override fun visitStatement(ctx: StatementContext?): AstNode {
-        val statement =
-                ctx?.function()
-                        ?: ctx?.println()
-                        ?: ctx?.whileStatement()
-                        ?: ctx?.ifStatement()
-                        ?: ctx?.assignment()
-                        ?: ctx?.variable()
-                        ?: ctx?.expr()
-                        ?: ctx?.returnStatement()
-                        ?: error("impossible statement")
-
-        return visit(statement)
+        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no statement"))
     }
 
     override fun visitFunction(ctx: FunctionContext?): AstNode {
-        val name = ctx?.funName()?.Identifier()?.text ?: error("function has no name")
+        val name = ctx?.funName()?.identifier()?.AlnumToken()?.text ?: error("function has no name")
 
-        val signature = ctx.parameterNames()?.Identifier()?.map {
-            it.text ?: error("parameter has no name")
+        val signature = ctx.parameterNames()?.identifier()?.map {
+            it.AlnumToken().text ?: error("parameter has no name")
         } ?: error("null signature")
 
         val body = visit(ctx.blockWithBraces()) as AstBlock
@@ -75,7 +63,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
     private fun AstNode.toExpr() : ExprNode = (this as AstExpr).expr
 
     override fun visitAssignment(ctx: AssignmentContext?): AstNode {
-        val name = ctx?.Identifier()?.text ?: error("var assignment has no name")
+        val name = ctx?.identifier()?.AlnumToken()?.text ?: error("var assignment has no name")
         val expr = visit(ctx.expr() ?: error("var assignment has no expression"))
         return AstAssignment(name, expr.toExpr())
     }
@@ -86,7 +74,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitFunctionCall(ctx: FunctionCallContext?): AstNode {
-        val name = ctx?.funName()?.Identifier()?.text ?: error("function call has no name")
+        val name = ctx?.funName()?.identifier()?.AlnumToken()?.text ?: error("function call has no name")
         val args = ctx.arguments()?.expr()?.map {
             visit(it).toExpr()
         } ?: error("function call args is null")
@@ -99,23 +87,17 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitAtom(ctx: AtomContext?): AstNode {
-        val atom = ctx?.constant()
-                ?: ctx?.functionCall()
-                ?: ctx?.varLoad()
-                ?: ctx?.expr()
-                ?: error("impossible atom")
-
-        return visit(atom)
+        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no atom"))
     }
 
-    private fun <T: ParserRuleContext> mergeOperators(opSwitcher: (String) -> ((Int, Int) -> Int), operators: List<TerminalNode>, operands: List<T>): ExprNode {
+    private fun <T: ParserRuleContext> mergeOperators(opSwitcher: (String) -> ((Int, Int) -> Int), operators: List<String>, operands: List<T>): ExprNode {
         val initial = visit(operands[0]).toExpr()
         val tail = operands.subList(1, operands.size)
-        return operators.zip(tail).fold(initial, { lExpr, (opToken, r) ->
+        return operators.zip(tail).fold(initial) { lExpr, (opToken, r) ->
             val rExpr = visit(r).toExpr()
-            val op = opSwitcher(opToken.text)
+            val op = opSwitcher(opToken)
             BinOp(op, lExpr, rExpr)
-        })
+        }
     }
 
     override fun visitLevel0(ctx: Level0Context?): AstNode {
@@ -127,7 +109,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> error("parser error")
             }
         },
-                ctx?.Op0() ?: error("operators is null"),
+                ctx?.op0()?.map { it.text } ?: error("operators is null"),
                 ctx.atom() ?: error("atoms is null"))
 
         return AstExpr(expr)
@@ -141,7 +123,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> error("parser error")
             }
         },
-                ctx?.Op1() ?: error("operators is null"),
+                ctx?.op1()?.map { it.text } ?: error("operators is null"),
                 ctx.level0() ?: error("level0 is null"))
 
         return AstExpr(expr)
@@ -162,7 +144,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> error("parser error")
             }
         },
-                ctx?.Op2() ?: error("operators is null"),
+                ctx?.op2()?.map { it.text } ?: error("operators is null"),
                 ctx.level1() ?: error("level1 is null"))
 
         return AstExpr(expr)
@@ -176,7 +158,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 else -> error("parser error")
             }
         },
-                ctx?.Op3() ?: error("operators is null"),
+                ctx?.op3()?.map { it.text } ?: error("operators is null"),
                 ctx.level2() ?: error("level2 is null"))
 
         return AstExpr(expr)
