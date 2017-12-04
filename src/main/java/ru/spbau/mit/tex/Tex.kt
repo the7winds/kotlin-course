@@ -15,8 +15,8 @@ abstract class TexElement {
         source.append(this).append("\n")
     }
 
-    operator fun TexElement.unaryPlus() {
-        this@TexElement.source.append(this)
+    open operator fun String.unaryMinus() {
+        source.append(this)
     }
 
     fun toOutputStream(outputStream: OutputStream) {
@@ -24,23 +24,29 @@ abstract class TexElement {
     }
 
     infix fun String.to(value: String) = "$this=$value"
+
+
+    protected fun <T : Tag> addTag(tag: T, init: T.() -> Unit) {
+        tag.run {
+            + "\\$name$suffix"
+            tag.init()
+        }
+
+        this@TexElement.source.append(tag)
+    }
+
+    protected fun <T : Tag> addScope(scope: T, init: T.() -> Unit) {
+        scope.run {
+            + "\\begin{$name}$suffix"
+            init()
+            + "\\end{$name}"
+        }
+
+        this@TexElement.source.append(scope)
+    }
 }
 
 open class Tag(val name: String, val suffix: String = "") : TexElement()
-
-fun <T : Tag> T.initTag(init: T.() -> Unit): T {
-    +("\\$name" + suffix)
-    init()
-    return this
-}
-
-fun <T : Tag> T.initScope(init: T.() -> Unit): T {
-    + ("\\begin{$name}$suffix")
-    init()
-    + "\\end{$name}"
-    return this
-}
-
 
 class DocumentClass(name: String) : Tag("documentclass", "{$name}")
 
@@ -57,22 +63,16 @@ class Align : Tag("align")
 
 class Enumerate : Tag("enumerate") {
     fun item(init: DocumentScope.() -> Unit) {
-        val item = Item()
-        + item.initTag {
-            val scope = DocumentScope()
-            scope.init()
-            + scope
+        addTag(Item()) {
+            - DocumentScope().apply(init).toString()
         }
     }
 }
 
 class Itemize : Tag("itemize") {
     fun item(init: DocumentScope.() -> Unit) {
-        val item = Item()
-        + item.initTag {
-            val scope = DocumentScope()
-            scope.init()
-            + scope
+        addTag(Item()) {
+            - DocumentScope().apply(init).toString()
         }
     }
 }
@@ -81,33 +81,29 @@ class Document : Tag("document")
 
 class DocumentScope : TexElement() {
     fun itemize(init: Itemize.() -> Unit) {
-        + Itemize().initScope(init)
+        addScope(Itemize(), init)
     }
 
     fun enumerate(init: Enumerate.() -> Unit) {
-        + Enumerate().initScope(init)
+        addScope(Enumerate(), init)
     }
 
     fun math(init: Tag.() -> Unit) {
-        + Math().initScope(init)
+        addScope(Math(), init)
     }
 
     fun align(init: Tag.() -> Unit) {
-        + Align().initScope(init)
+        addScope(Align(), init)
     }
 
     fun customTag(name: String, vararg args: String, init: Tag.() -> Unit) {
-        + Tag(name, argsString(*args)).initScope(init)
+        addScope(Tag(name, argsString(*args)), init)
     }
 
     fun frame(frameTitle: String, init: DocumentScope.() -> Unit) {
-        val frame = Frame()
-        frame.initScope {
+        addScope(Frame()) {
             + "\\frametitle{$frameTitle}"
-            val scope = DocumentScope()
-            scope.init()
-            + scope
+            - DocumentScope().apply(init).toString()
         }
-        + frame
     }
 }

@@ -5,15 +5,13 @@ import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 
 class File : TexElement() {
-    fun documentClass(name: String) = + DocumentClass(name).initTag {  }
+    fun documentClass(name: String) = addTag(DocumentClass(name), { })
 
-    fun usepackage(name: String, vararg args: String) = + Usepackage(name, *args).initTag {  }
+    fun usepackage(name: String, vararg args: String) = addTag(Usepackage(name, *args), {  })
 
-    fun document(content: DocumentScope.() -> Unit) = + Document().initScope {
-        val scope = DocumentScope()
-        scope.content()
-        + scope
-    }
+    fun document(content: DocumentScope.() -> Unit) = addScope(Document(), {
+        - DocumentScope().apply(content).toString()
+    })
 
     fun compile(outputDirectory: String, timeout: Long = 2) {
         Paths.get(outputDirectory).toFile().deleteRecursively()
