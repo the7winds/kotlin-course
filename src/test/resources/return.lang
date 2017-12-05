@@ -1,0 +1,7 @@
+fun foo() {
+    println(41)
+    return
+    println(42)
+}
+
+foo()
