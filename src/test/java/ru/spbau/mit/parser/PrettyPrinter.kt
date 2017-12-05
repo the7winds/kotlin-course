@@ -107,7 +107,7 @@ class PrettyPrinter : LangBaseVisitor<String>() {
     private fun mergeOperators(operands: List<String>, operators: List<String>): String {
         return if (operators.isNotEmpty()) {
             val initial = operands[0]
-            val tail = operands.subList(1, operands.size)
+            val tail = operands.drop(1)
             operators.zip(tail).fold(initial, { acc, (op, r) -> "($acc $op $r)"})
         } else {
             operands[0]

@@ -92,7 +92,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
     private fun <T: ParserRuleContext> mergeOperators(operators: List<String>, operands: List<T>, opSwitcher: (String) -> ((Int, Int) -> Int)): ExprNode {
         val initial = visit(operands[0]).toExpr()
-        val tail = operands.subList(1, operands.size)
+        val tail = operands.drop(1)
         return operators.zip(tail).fold(initial) { lExpr, (opToken, r) ->
             val rExpr = visit(r).toExpr()
             val op = opSwitcher(opToken)
