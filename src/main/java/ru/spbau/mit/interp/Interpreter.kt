@@ -107,13 +107,8 @@ class AstWhile(private val condition: ExprNode, private val block: AstBlock) : A
 
 class AstPrintln(private val args: List<ExprNode>) : AstNode {
     override fun run(scope: Scope) {
-        args.forEachIndexed { i, x ->
-            scope.output.print("${x.eval(scope)}")
-            if (i + 1 != args.size) {
-                scope.output.print(" ")
-            }
-        }
-        scope.output.println()
+        val outputString = args.joinToString(separator = " ") { it.eval(scope).toString() }
+        scope.output.println(outputString)
     }
 }
 
