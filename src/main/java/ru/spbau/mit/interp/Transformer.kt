@@ -90,7 +90,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
         return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no atom"))
     }
 
-    private fun <T: ParserRuleContext> mergeOperators(opSwitcher: (String) -> ((Int, Int) -> Int), operators: List<String>, operands: List<T>): ExprNode {
+    private fun <T: ParserRuleContext> mergeOperators(operators: List<String>, operands: List<T>, opSwitcher: (String) -> ((Int, Int) -> Int)): ExprNode {
         val initial = visit(operands[0]).toExpr()
         val tail = operands.subList(1, operands.size)
         return operators.zip(tail).fold(initial) { lExpr, (opToken, r) ->
@@ -101,30 +101,31 @@ class Transformer : LangBaseVisitor<AstNode>() {
     }
 
     override fun visitLevel0(ctx: Level0Context?): AstNode {
-        val expr = mergeOperators({
+        val expr = mergeOperators(
+                ctx?.op0()?.map { it.text } ?: error("operators is null"),
+                ctx.atom() ?: error("atoms is null"))
+        {
             when (it) {
                 "*" -> { x, y -> x * y }
                 "/" -> { x, y -> x / y }
                 "%" -> { x, y -> x % y }
                 else -> error("parser error")
             }
-        },
-                ctx?.op0()?.map { it.text } ?: error("operators is null"),
-                ctx.atom() ?: error("atoms is null"))
+        }
 
         return AstExpr(expr)
     }
 
     override fun visitLevel1(ctx: Level1Context?): AstNode {
-        val expr = mergeOperators({
+        val expr = mergeOperators(
+                ctx?.op1()?.map { it.text } ?: error("operators is null"),
+                ctx.level0() ?: error("level0 is null")) {
             when (it) {
                 "+" -> { x, y -> x + y }
                 "-" -> { x, y -> x - y }
                 else -> error("parser error")
             }
-        },
-                ctx?.op1()?.map { it.text } ?: error("operators is null"),
-                ctx.level0() ?: error("level0 is null"))
+        }
 
         return AstExpr(expr)
     }
@@ -133,7 +134,9 @@ class Transformer : LangBaseVisitor<AstNode>() {
         get() = if (this) { 1 } else { 0 }
 
     override fun visitLevel2(ctx: Level2Context?): AstNode {
-        val expr = mergeOperators({
+        val expr = mergeOperators(
+                ctx?.op2()?.map { it.text } ?: error("operators is null"),
+                ctx.level1() ?: error("level1 is null")) {
             when (it) {
                 "<"  -> { x, y -> (x < y).int }
                 ">"  -> { x, y -> (x > y).int }
@@ -143,23 +146,21 @@ class Transformer : LangBaseVisitor<AstNode>() {
                 "!=" -> { x, y -> (x != y).int }
                 else -> error("parser error")
             }
-        },
-                ctx?.op2()?.map { it.text } ?: error("operators is null"),
-                ctx.level1() ?: error("level1 is null"))
+        }
 
         return AstExpr(expr)
     }
 
     override fun visitLevel3(ctx: Level3Context?): AstNode {
-        val expr = mergeOperators({
+        val expr = mergeOperators(
+                ctx?.op3()?.map { it.text } ?: error("operators is null"),
+                ctx.level2() ?: error("level2 is null")) {
             when (it) {
                 "&&"  -> { x, y -> (x != 0 && y != 0).int }
                 "||"  -> { x, y -> (x != 0 || y != 0).int }
                 else -> error("parser error")
             }
-        },
-                ctx?.op3()?.map { it.text } ?: error("operators is null"),
-                ctx.level2() ?: error("level2 is null"))
+        }
 
         return AstExpr(expr)
     }
