@@ -4,4 +4,11 @@ fun foo() {
     println(42)
 }
 
+fun bar() {
+    42
+    println(43)
+    return
+}
+
 foo()
+bar()
