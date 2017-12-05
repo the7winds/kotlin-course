@@ -10,14 +10,8 @@ class PrettyPrinter : LangBaseVisitor<String>() {
     override fun visitBlock(ctx: BlockContext?): String =
             ctx?.statement()?.joinToString(separator = "\n") { visit(it) } ?: "<null>"
 
-
     override fun visitBlockWithBraces(ctx: BlockWithBracesContext?): String =
             arrayOf("{", visit(ctx?.block()), "}").joinToString(separator = "\n")
-
-
-    override fun visitStatement(ctx: StatementContext?): String {
-        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no statement"))
-    }
 
     override fun visitFunction(ctx: FunctionContext?): String {
         val name = visit(ctx?.funName())
@@ -112,10 +106,6 @@ class PrettyPrinter : LangBaseVisitor<String>() {
         } else {
             operands[0]
         }
-    }
-
-    override fun visitExpr(ctx: LangParser.ExprContext?): String {
-        return visit(ctx?.level3())
     }
 
     override fun visitConstant(ctx: LangParser.ConstantContext?): String {

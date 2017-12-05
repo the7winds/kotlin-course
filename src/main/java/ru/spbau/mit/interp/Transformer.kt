@@ -20,10 +20,6 @@ class Transformer : LangBaseVisitor<AstNode>() {
     override fun visitBlockWithBraces(ctx: BlockWithBracesContext?): AstNode =
             visit(ctx?.block() ?: error("no block found"))
 
-    override fun visitStatement(ctx: StatementContext?): AstNode {
-        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no statement"))
-    }
-
     override fun visitFunction(ctx: FunctionContext?): AstNode {
         val name = ctx?.funName()?.identifier()?.AlnumToken()?.text ?: error("function has no name")
 
@@ -164,8 +160,6 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
         return AstExpr(expr)
     }
-
-    override fun visitExpr(ctx: ExprContext?): AstNode = visit(ctx?.level3() ?: error("level3 is null"))
 
     override fun visitConstant(ctx: ConstantContext?): AstNode =
             AstExpr(Literal(ctx?.value ?: error("constant is null")))
