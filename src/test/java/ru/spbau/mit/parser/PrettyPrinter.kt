@@ -1,6 +1,5 @@
 package ru.spbau.mit.parser
 
-import org.antlr.v4.runtime.ParserRuleContext
 import ru.spbau.mit.parser.LangParser.*
 
 class PrettyPrinter : LangBaseVisitor<String>() {
@@ -69,10 +68,6 @@ class PrettyPrinter : LangBaseVisitor<String>() {
 
     override fun visitVarLoad(ctx: LangParser.VarLoadContext?): String =
             ctx?.identifier()?.text ?: "<null>"
-
-    override fun visitAtom(ctx: LangParser.AtomContext?): String {
-        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no atom"))
-    }
 
     override fun visitLevel0(ctx: LangParser.Level0Context?): String {
         val operands = ctx?.atom()!!.map { visit(it) }

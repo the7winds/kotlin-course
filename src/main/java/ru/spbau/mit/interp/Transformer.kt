@@ -82,10 +82,6 @@ class Transformer : LangBaseVisitor<AstNode>() {
         return AstExpr(LoadVar(ctx?.text ?: error("var load has no name")))
     }
 
-    override fun visitAtom(ctx: AtomContext?): AstNode {
-        return visit(ctx?.getRuleContext(ParserRuleContext::class.java, 0) ?: error("no atom"))
-    }
-
     private fun <T: ParserRuleContext> mergeOperators(operators: List<String>, operands: List<T>, opSwitcher: (String) -> ((Int, Int) -> Int)): ExprNode {
         val initial = visit(operands[0]).toExpr()
         val tail = operands.drop(1)
