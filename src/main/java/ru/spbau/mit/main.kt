@@ -23,16 +23,11 @@ fun main(args: Array<String>) {
     try {
         val transformer = Transformer()
         val ast = transformer.visit(parser.file())
-
-        try {
-            val scope = Scope(null)
-            ast.run(scope)
-        } catch (e: Exception) {
-            System.err.println("runtime error: ${e.message}")
-            System.exit(1)
-        }
+        val scope = Scope(null)
+        ast?.run(scope)
     } catch (e: Exception) {
-        System.err.println("parser error: ${e.message}")
+        System.err.println("something has broken: ${e.message}")
         System.exit(1)
     }
+
 }
