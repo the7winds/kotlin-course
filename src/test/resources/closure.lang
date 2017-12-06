@@ -1,0 +1,13 @@
+var x = 10
+
+fun closure(y) {
+    var z = x + y
+    println(z)
+}
+
+closure(10)
+
+x = x + 20
+
+closure(10)
+

@@ -1,0 +1,14 @@
+fun foo() {
+    println(41)
+    return
+    println(42)
+}
+
+fun bar() {
+    42
+    println(43)
+    return
+}
+
+foo()
+bar()
