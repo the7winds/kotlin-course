@@ -13,9 +13,8 @@ class Transformer : LangBaseVisitor<AstNode>() {
             visit(ctx?.block() ?: error("no block found"))
 
     override fun visitBlock(ctx: BlockContext?): AstNode =
-            AstBlock(ctx
-                    ?.statement()
-                    ?.map { visit(it) } ?: error("no statements found"))
+            AstBlock(Meta(ctx?.start?.line!!),
+                    ctx.statement()?.map { visit(it) } ?: error("no statements found"))
 
     override fun visitBlockWithBraces(ctx: BlockWithBracesContext?): AstNode =
             visit(ctx?.block() ?: error("no block found"))
@@ -29,19 +28,19 @@ class Transformer : LangBaseVisitor<AstNode>() {
 
         val body = visit(ctx.blockWithBraces()) as AstBlock
 
-        return AstFunction(name, signature, body)
+        return AstFunction(Meta(ctx.start.line), name, signature, body)
     }
 
     override fun visitVariable(ctx: VariableContext?): AstNode {
         val varName = ctx?.varName()?.text ?: error("variable has no name")
         val expr = if (ctx.expr() != null) { visit(ctx.expr()) } else { null }
-        return AstVarDeclaration(varName, expr?.toExpr())
+        return AstVarDeclaration(Meta(ctx.start.line), varName, expr?.toExpr())
     }
 
     override fun visitWhileStatement(ctx: WhileStatementContext?): AstNode {
         val expr = visit(ctx?.expr() ?: error("while has no condition"))
         val body = visit(ctx.blockWithBraces() ?: error("while has no body")) as AstBlock
-        return AstWhile(expr.toExpr(), body)
+        return AstWhile(Meta(ctx.start.line), expr.toExpr(), body)
     }
 
     override fun visitIfStatement(ctx: IfStatementContext?): AstNode {
@@ -53,7 +52,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
         val elseCtx = ctx.blockWithBraces(1)
         val elseBody = if (elseCtx != null) { visit(elseCtx) } else { null } as AstBlock?
 
-        return AstIf(expr.toExpr(), thenBody, elseBody)
+        return AstIf(Meta(ctx.start.line), expr.toExpr(), thenBody, elseBody)
     }
 
     private fun AstNode.toExpr() : ExprNode = (this as AstExpr).expr
@@ -61,12 +60,12 @@ class Transformer : LangBaseVisitor<AstNode>() {
     override fun visitAssignment(ctx: AssignmentContext?): AstNode {
         val name = ctx?.identifier()?.AlnumToken()?.text ?: error("var assignment has no name")
         val expr = visit(ctx.expr() ?: error("var assignment has no expression"))
-        return AstAssignment(name, expr.toExpr())
+        return AstAssignment(Meta(ctx.start.line), name, expr.toExpr())
     }
 
     override fun visitReturnStatement(ctx: ReturnStatementContext?): AstNode {
         val expr = if (ctx?.expr() != null) { visit(ctx.expr()) } else { null }
-        return AstReturn(expr?.toExpr())
+        return AstReturn(Meta(ctx!!.start.line), expr?.toExpr())
     }
 
     override fun visitFunctionCall(ctx: FunctionCallContext?): AstNode {
@@ -75,11 +74,12 @@ class Transformer : LangBaseVisitor<AstNode>() {
             visit(it).toExpr()
         } ?: error("function call args is null")
 
-        return AstExpr(Call(name, args))
+        return AstExpr(Meta(ctx.start.line), Call(name, args))
     }
 
     override fun visitVarLoad(ctx: VarLoadContext?): AstNode {
-        return AstExpr(LoadVar(ctx?.text ?: error("var load has no name")))
+        ctx ?: error("var load has no name")
+        return AstExpr(Meta(ctx.start.line), LoadVar(ctx.text))
     }
 
     private fun <T: ParserRuleContext> mergeOperators(operators: List<String>, operands: List<T>, opSwitcher: (String) -> ((Int, Int) -> Int)): ExprNode {
@@ -105,7 +105,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
             }
         }
 
-        return AstExpr(expr)
+        return AstExpr(Meta(ctx.start.line), expr)
     }
 
     override fun visitLevel1(ctx: Level1Context?): AstNode {
@@ -119,7 +119,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
             }
         }
 
-        return AstExpr(expr)
+        return AstExpr(Meta(ctx.start.line), expr)
     }
 
     private val Boolean.int
@@ -140,7 +140,7 @@ class Transformer : LangBaseVisitor<AstNode>() {
             }
         }
 
-        return AstExpr(expr)
+        return AstExpr(Meta(ctx.start.line), expr)
     }
 
     override fun visitLevel3(ctx: Level3Context?): AstNode {
@@ -154,17 +154,30 @@ class Transformer : LangBaseVisitor<AstNode>() {
             }
         }
 
-        return AstExpr(expr)
+        return AstExpr(Meta(ctx.start.line), expr)
     }
 
-    override fun visitConstant(ctx: ConstantContext?): AstNode =
-            AstExpr(Literal(ctx?.value ?: error("constant is null")))
+    // looks useless but otherwise it fails because there are terminal nodes in grammar
+    override fun visitAtom(ctx: AtomContext?): AstNode =
+            visit(ctx?.expr()
+                    ?: ctx?.varLoad()
+                    ?: ctx?.functionCall()
+                    ?: ctx?.functionCall()
+                    ?: ctx?.constant()
+                    ?: error("no atom"))
+
+    override fun visitConstant(ctx: ConstantContext?): AstNode {
+        ctx ?: error("constant is null")
+        return AstExpr(Meta(ctx.start.line), Literal(ctx.value))
+    }
 
     override fun visitPrintln(ctx: PrintlnContext?): AstNode {
-        val args = ctx?.arguments()?.expr()
+        ctx ?: error("println is null")
+
+        val args = ctx.arguments()?.expr()
                 ?.map { visit(it).toExpr() } ?: Collections.emptyList()
 
-        return AstPrintln(args)
+        return AstPrintln(Meta(ctx.start.line), args)
     }
 
     override fun visitErrorNode(node: ErrorNode?): AstNode =

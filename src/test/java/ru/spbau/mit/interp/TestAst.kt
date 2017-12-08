@@ -8,9 +8,9 @@ class TestAst {
     @Test
     fun testIf() {
         val condition = BinOp({ x, y -> if (x < y) 1 else 0 }, LoadVar("c"), Literal(1))
-        val thenBody = AstBlock(listOf(AstAssignment("x", Literal(1))))
-        val elseBody = AstBlock(listOf(AstAssignment("x", Literal(2))))
-        val statement = AstIf(condition, thenBody, elseBody)
+        val thenBody = AstBlock(Meta(0), listOf(AstAssignment(Meta(0), "x", Literal(1))))
+        val elseBody = AstBlock(Meta(0), listOf(AstAssignment(Meta(0), "x", Literal(2))))
+        val statement = AstIf(Meta(0), condition, thenBody, elseBody)
 
         val scope = Scope(null)
         scope.addVar("x")
@@ -35,9 +35,9 @@ class TestAst {
     @Test
     fun testWhile() {
         val condition = BinOp({ x, y -> if (x < y) 1 else 0 }, LoadVar("i"), Literal(3))
-        val assignment = AstAssignment("i", BinOp({ x, y -> x + y }, LoadVar("i"), Literal(1)))
-        val body = AstBlock(listOf(assignment))
-        val statement = AstWhile(condition, body)
+        val assignment = AstAssignment(Meta(0), "i", BinOp({ x, y -> x + y }, LoadVar("i"), Literal(1)))
+        val body = AstBlock(Meta(0), listOf(assignment))
+        val statement = AstWhile(Meta(0), condition, body)
 
         val scope = Scope(null)
         scope.addVar("i", 0)
@@ -51,7 +51,7 @@ class TestAst {
 
     @Test
     fun testVarDeclaration() {
-        val statement = AstVarDeclaration("x", BinOp({ x, y -> x + y }, LoadVar("y"), Literal(1)))
+        val statement = AstVarDeclaration(Meta(0), "x", BinOp({ x, y -> x + y }, LoadVar("y"), Literal(1)))
         val scope = Scope(null)
         scope.addVar("y", 41)
 
@@ -63,7 +63,7 @@ class TestAst {
 
     @Test
     fun testAssignment() {
-        val statement = AstAssignment("x", BinOp({ x, y -> x + y }, LoadVar("x"), Literal(1)))
+        val statement = AstAssignment(Meta(0), "x", BinOp({ x, y -> x + y }, LoadVar("x"), Literal(1)))
         val scope = Scope(null)
         scope.addVar("x", 41)
 
@@ -76,12 +76,12 @@ class TestAst {
     @Test
     fun testFunCall() {
         val expr = Call("foo", listOf())
-        val body = AstBlock(listOf(
-                AstPrintln(listOf(Literal(42))),
-                AstReturn(LoadVar("x"))
+        val body = AstBlock(Meta(0), listOf(
+                AstPrintln(Meta(0), listOf(Literal(42))),
+                AstReturn(Meta(0), LoadVar("x"))
         ))
 
-        val func = AstFunction("foo", listOf(), body)
+        val func = AstFunction(Meta(0), "foo", listOf(), body)
 
         val scope = Scope(null)
         scope.addFunction(func)

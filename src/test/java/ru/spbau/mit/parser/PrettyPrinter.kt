@@ -93,6 +93,15 @@ class PrettyPrinter : LangBaseVisitor<String>() {
         return mergeOperators(operands, operators)
     }
 
+    // looks useless but otherwise it fails because there are terminal nodes in grammar
+    override fun visitAtom(ctx: AtomContext?): String =
+            visit(ctx?.expr()
+                    ?: ctx?.varLoad()
+                    ?: ctx?.functionCall()
+                    ?: ctx?.functionCall()
+                    ?: ctx?.constant()
+                    ?: error("no atom"))
+
     private fun mergeOperators(operands: List<String>, operators: List<String>): String {
         return if (operators.isNotEmpty()) {
             val initial = operands[0]
