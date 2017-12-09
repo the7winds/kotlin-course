@@ -62,24 +62,24 @@ class Align : Tag("align")
 
 
 class Enumerate : Tag("enumerate") {
-    fun item(init: DocumentScope.() -> Unit) {
+    fun item(init: GeneralScope.() -> Unit) {
         addTag(Item()) {
-            - DocumentScope().apply(init).toString()
+            - GeneralScope().apply(init).toString()
         }
     }
 }
 
 class Itemize : Tag("itemize") {
-    fun item(init: DocumentScope.() -> Unit) {
+    fun item(init: GeneralScope.() -> Unit) {
         addTag(Item()) {
-            - DocumentScope().apply(init).toString()
+            - GeneralScope().apply(init).toString()
         }
     }
 }
 
 class Document : Tag("document")
 
-class DocumentScope : TexElement() {
+open class GeneralScope : TexElement() {
     fun itemize(init: Itemize.() -> Unit) {
         addScope(Itemize(), init)
     }
@@ -99,11 +99,13 @@ class DocumentScope : TexElement() {
     fun customTag(name: String, vararg args: String, init: Tag.() -> Unit) {
         addScope(Tag(name, argsString(*args)), init)
     }
+}
 
-    fun frame(frameTitle: String, init: DocumentScope.() -> Unit) {
+class BeamerScope : GeneralScope() {
+    fun frame(frameTitle: String, init: BeamerScope.() -> Unit) {
         addScope(Frame()) {
             + "\\frametitle{$frameTitle}"
-            - DocumentScope().apply(init).toString()
+            - BeamerScope().apply(init).toString()
         }
     }
 }

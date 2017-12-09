@@ -9,8 +9,8 @@ class File : TexElement() {
 
     fun usepackage(name: String, vararg args: String) = addTag(Usepackage(name, *args), {  })
 
-    fun document(content: DocumentScope.() -> Unit) = addScope(Document(), {
-        - DocumentScope().apply(content).toString()
+    fun document(content: BeamerScope.() -> Unit) = addScope(Document(), {
+        - BeamerScope().apply(content).toString()
     })
 
     fun compile(outputDirectory: String, timeout: Long = 2) {
